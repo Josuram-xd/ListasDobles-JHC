@@ -257,7 +257,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .litter-piece.trash { font-size: 9px; }
 .truck .marcher-body { fill: #4f7d3a; stroke: var(--surface); stroke-width: 2; }
 .truck[data-state="waiting"], .truck[data-state="arrived"] { opacity: 0; }
-.truck .broom { font-size: 13px; }
+.truck .broom { font-size: 13px; transform-box: fill-box; transform-origin: center; }
 .truck[data-state="marching"] { animation: none; }
 .truck[data-state="marching"] .broom { animation: sweep .35s ease-in-out infinite alternate; }
 @keyframes sweep { from { rotate: -18deg; } to { rotate: 18deg; } }

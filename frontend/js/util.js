@@ -28,7 +28,7 @@ export function svg(tag, attrs = {}, parent) {
 
 /** Position (meters) at a given minute, interpolating the samples of the simulation. */
 export function trackPosition(track, time) {
-  const exact = time / track.every;
+  const exact = Math.max(0, time / track.every);
   const index = Math.min(Math.floor(exact), track.positions.length - 1);
   const next = Math.min(index + 1, track.positions.length - 1);
   const from = track.positions[index];

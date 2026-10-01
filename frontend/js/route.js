@@ -85,6 +85,7 @@ export class RouteView {
 
   seek(time) {
     if (!this.data) return;
+    time = Math.min(Math.max(0, time), this.data.summary.total_minutes);
     this.time = time;
     this.controls.range.value = time;
     this.controls.clock.textContent = clockAt(this.data.start_time, time);
@@ -115,26 +116,32 @@ export class RouteView {
   }
 
   toggle() {
+    if (!this.data) return;
     this.playing = !this.playing;
     this.controls.play.textContent = this.playing ? "❚❚" : "▶";
+    // always stop the previous loop so two loops never run at the same time
+    cancelAnimationFrame(this.frameId);
     if (!this.playing) return;
-    if (this.time >= this.data.summary.total_minutes) this.time = 0;
+    if (this.time >= this.data.summary.total_minutes) this.seek(0);
 
-    let last = performance.now();
+    let last = null;
     const frame = (now) => {
       if (!this.playing) return;
-      const speed = Number(this.controls.speed.value) * BASE_MINUTES_PER_SECOND;
-      const next = this.time + ((now - last) / 1000) * speed;
+      // the first frame only sets the reference: its timestamp can be earlier than
+      // performance.now() at click time, which made the time go negative
+      const elapsed = last === null ? 0 : Math.max(0, now - last);
       last = now;
+      const speed = Number(this.controls.speed.value) * BASE_MINUTES_PER_SECOND;
+      const next = this.time + (elapsed / 1000) * speed;
       if (next >= this.data.summary.total_minutes) {
         this.seek(this.data.summary.total_minutes);
         this.toggle();
         return;
       }
       this.seek(next);
-      requestAnimationFrame(frame);
+      this.frameId = requestAnimationFrame(frame);
     };
-    requestAnimationFrame(frame);
+    this.frameId = requestAnimationFrame(frame);
   }
 
   highlight(id) {
