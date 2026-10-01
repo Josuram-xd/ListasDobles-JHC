@@ -54,6 +54,7 @@ class App {
       <div><b>${summary.members}</b><span>personas</span></div>
       <div><b>${duration(summary.total_minutes)}</b><span>duración</span></div>
       <div><b>${summary.end_time}</b><span>llega el último</span></div>
+      <div><b>${summary.rests}</b><span>paradas de descanso</span></div>
       <div class="${summary.warnings ? "bad" : "good"}"><b>${summary.warnings}</b><span>${summary.warnings ? "problemas de orden" : "orden válido ✔"}</span></div>`;
     $("#start-time").value = snapshot.start_time;
     $("#route-name").textContent = snapshot.route.name;
@@ -69,7 +70,8 @@ class App {
   createFromPalette(category, anchorId, place) {
     const info = this.snapshot.categories.find((c) => c.value === category);
     const count = this.snapshot.participants.filter((p) => p.category === category).length + 1;
-    const members = category.includes("float") ? 15 : category === "individual" ? 1 : 25;
+    const defaultMembers = { individual: 1, ad_cart: 2, float: 15, motor_float: 15 };
+    const members = defaultMembers[category] ?? 25;
     this.run("POST", "/participants",
       { name: `${info.label} ${count}`, category, members, anchor_id: anchorId, place },
       "Grupo creado. Doble clic en su nombre para renombrarlo.");

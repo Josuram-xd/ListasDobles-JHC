@@ -21,6 +21,9 @@ function cardTemplate(p) {
       <div class="body">
         <div class="name" title="Doble clic para renombrar">${escapeHtml(p.name)}</div>
         <div class="meta">${escapeHtml(p.label)} · ${p.members} integrantes · ${p.length} m · sale ${p.schedule.passes[0].time}</div>
+        <div class="meta rest">${p.rest_minutes
+          ? `☕ descansa cada ~${p.rest_every} m durante ${p.rest_minutes} min · ${p.schedule.rests.length} paradas`
+          : "📢 no se detiene: va anunciando durante todo el recorrido"}</div>
         ${p.theme ? `<div class="theme">“${escapeHtml(p.theme)}”</div>` : ""}
         ${issues ? `<ul class="issues">${issues}</ul>` : ""}
         <div class="links">prev: ${p.prev_id ?? "null"} · id: ${p.id} · next: ${p.next_id ?? "null"}</div>
