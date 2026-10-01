@@ -1,15 +1,8 @@
-import { clockAt, escapeHtml } from "./util.js";
+import { CleanupCrew } from "./cleanup.js";
+import { clockAt, escapeHtml, svg, trackPosition } from "./util.js";
 
-const SVG_NS = "http://www.w3.org/2000/svg";
 const ROUTE_PATH = "M 60 395 C 190 400 170 300 300 300 S 470 360 520 290 S 520 175 420 160 S 250 130 300 80 S 540 40 735 70";
 const BASE_MINUTES_PER_SECOND = 4;
-
-function svg(tag, attrs = {}, parent) {
-  const el = document.createElementNS(SVG_NS, tag);
-  Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
-  if (parent) parent.appendChild(el);
-  return el;
-}
 
 /** Draws the route and animates every group along it over time. */
 export class RouteView {
@@ -35,9 +28,12 @@ export class RouteView {
     svg("path", { d: ROUTE_PATH, class: "street-edge" }, this.svg);
     this.path = svg("path", { d: ROUTE_PATH, class: "street" }, this.svg);
     svg("path", { d: ROUTE_PATH, class: "street-line" }, this.svg);
+    const litterLayer = svg("g", {}, this.svg);
     this.checkpointLayer = svg("g", {}, this.svg);
+    const truckLayer = svg("g", {}, this.svg);
     this.marcherLayer = svg("g", {}, this.svg);
     this.pathLength = this.path.getTotalLength();
+    this.cleanupCrew = new CleanupCrew(litterLayer, truckLayer, this.path);
   }
 
   setData(snapshot) {
@@ -70,6 +66,7 @@ export class RouteView {
       svg("text", { "text-anchor": "middle", dy: "4" }, bubble).textContent = "☕";
       this.marchers.set(p.id, group);
     });
+    this.cleanupCrew.setData(snapshot.cleanup);
     this.seek(this.time);
   }
 
@@ -95,7 +92,7 @@ export class RouteView {
     const routeLength = this.data.route.length;
     const counts = { waiting: 0, marching: 0, resting: 0, arrived: 0 };
     for (const p of this.data.participants) {
-      const meters = this.positionAt(p.schedule.track, time);
+      const meters = trackPosition(p.schedule.track, time);
       const resting = p.schedule.rests.some((rest) => time >= rest.start && time < rest.end);
       const marcher = this.marchers.get(p.id);
       const state = meters <= 0 ? "waiting" : meters >= routeLength ? "arrived" : resting ? "resting" : "marching";
@@ -110,15 +107,11 @@ export class RouteView {
       `⏳ En espera: <b>${counts.waiting}</b> · 🎉 Desfilando: <b>${counts.marching}</b>` +
       ` · ☕ Descansando: <b>${counts.resting}</b> · 🏁 Llegaron: <b>${counts.arrived}</b>` +
       ` · Recorrido de <b>${(routeLength / 1000).toFixed(1)} km</b> (${escapeHtml(this.data.route.name)})`;
-  }
 
-  /** Linear interpolation between the positions sampled by the simulation. */
-  positionAt(track, time) {
-    const exact = time / track.every;
-    const index = Math.min(Math.floor(exact), track.positions.length - 1);
-    const next = Math.min(index + 1, track.positions.length - 1);
-    const from = track.positions[index];
-    return from + (track.positions[next] - from) * (exact - index);
+    const leader = this.data.participants[0];
+    const leaderMeters = leader ? trackPosition(leader.schedule.track, time) : 0;
+    const cleanupStatus = this.cleanupCrew.update(time, leaderMeters, routeLength);
+    if (cleanupStatus) this.controls.status.innerHTML += `<br>${cleanupStatus}`;
   }
 
   toggle() {

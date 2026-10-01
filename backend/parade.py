@@ -1,7 +1,7 @@
 """The parade: a doubly linked list of participants plus its rules and timetable."""
 
 from .linked_list import DoublyLinkedList
-from .models import CATEGORY_INFO, Category, Participant
+from .models import CATEGORY_INFO, Category, CleanupTruck, Participant
 from .route import DEFAULT_ROUTE
 from .rules import RuleBook
 from .simulation import ParadeSimulator
@@ -70,6 +70,7 @@ class Parade:
 
     def snapshot(self):
         timeline, summary = self.simulator.build(self.lineup, self.start_time)
+        cleanup = timeline.pop(CleanupTruck.id, None)
         participants = []
         for position, node in enumerate(self.lineup, start=1):
             participant = node.value
@@ -100,5 +101,6 @@ class Parade:
             "route": self.route.to_dict(),
             "categories": [{"value": c.value, "label": i.label, "icon": i.icon} for c, i in CATEGORY_INFO.items()],
             "participants": participants,
+            "cleanup": cleanup and {"name": CleanupTruck.name, "icon": CleanupTruck.info.icon, "schedule": cleanup},
             "summary": summary,
         }

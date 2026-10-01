@@ -53,7 +53,7 @@ class App {
       <div><b>${summary.groups}</b><span>grupos</span></div>
       <div><b>${summary.members}</b><span>personas</span></div>
       <div><b>${duration(summary.total_minutes)}</b><span>duración</span></div>
-      <div><b>${summary.end_time}</b><span>llega el último</span></div>
+      <div><b>${summary.end_time}</b><span>llega el último · 🚛 calle limpia ${summary.clean_time}</span></div>
       <div><b>${summary.rests}</b><span>paradas de descanso</span></div>
       <div class="${summary.warnings ? "bad" : "good"}"><b>${summary.warnings}</b><span>${summary.warnings ? "problemas de orden" : "orden válido ✔"}</span></div>`;
     $("#start-time").value = snapshot.start_time;

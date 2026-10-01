@@ -56,6 +56,15 @@ export class NarrativeView {
         </li>`;
     });
 
-    this.container.innerHTML = `${intro}<ol class="steps">${steps.join("")}</ol>`;
+    const cleanup = snapshot.cleanup;
+    const closing = cleanup ? `
+      <li class="step cleanup-step">
+        <span class="step-number">${cleanup.icon}</span>
+        <div><p><b>Al final</b> pasa el <strong>${escapeHtml(cleanup.name.toLowerCase())}</strong>: sigue al último grupo
+        a unos 60 m, sin detenerse, recogiendo el confeti, el talco y la basura. Sale a las ${cleanup.schedule.passes[0].time}
+        y deja la calle limpia a las <b>${summary.clean_time}</b>. 🧹✨</p></div>
+      </li>` : "";
+
+    this.container.innerHTML = `${intro}<ol class="steps">${steps.join("")}${closing}</ol>`;
   }
 }

@@ -16,3 +16,21 @@ export function duration(minutes) {
 }
 
 export const SEVERITY_ICON = { error: "⛔", warning: "⚠️", info: "💡" };
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+export function svg(tag, attrs = {}, parent) {
+  const el = document.createElementNS(SVG_NS, tag);
+  Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+  if (parent) parent.appendChild(el);
+  return el;
+}
+
+/** Position (meters) at a given minute, interpolating the samples of the simulation. */
+export function trackPosition(track, time) {
+  const exact = time / track.every;
+  const index = Math.min(Math.floor(exact), track.positions.length - 1);
+  const next = Math.min(index + 1, track.positions.length - 1);
+  const from = track.positions[index];
+  return from + (track.positions[next] - from) * (exact - index);
+}

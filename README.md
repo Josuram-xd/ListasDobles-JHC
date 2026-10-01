@@ -25,6 +25,8 @@ Abrir http://127.0.0.1:8000
 - **Descansos**: cada grupo para a descansar según su categoría y con su propia variación (no todos igual).
   Cuando uno para, los de atrás frenan para no acercarse a menos de 12 m y los de adelante lo esperan para no
   alejarse más de 45 m, así la distancia entre grupos se mantiene parecida (efecto acordeón).
+- **Carro de la basura** 🚛: no es un nodo de la lista; siempre sigue al `tail` a unos 60 m, sin descansar.
+  En el mapa la calle se llena de confeti y basura cuando pasa el desfile, y el carro la va limpiando.
 - **Carritos publicitarios** 📢: no descansan, no pueden abrir el desfile ni ir dos seguidos, y el
   auto-organizar los reparte de forma pareja a lo largo del desfile.
 - **Explicación del orden**: "Abre el desfile…, luego…, cierra el desfile…".

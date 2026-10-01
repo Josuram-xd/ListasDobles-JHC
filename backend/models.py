@@ -40,6 +40,19 @@ CATEGORY_INFO = {
 }
 
 
+CLEANUP_INFO = CategoryInfo("Carro de la basura", "🚛", 99, 24, 10, 0, 0, motorized=True)
+
+
+class CleanupTruck:
+    """Service vehicle that always closes the parade behind the tail.
+    It is not part of the lineup, so it cannot be dragged or reordered."""
+    id = "cleanup"
+    name = "Carro de la basura"
+    info = CLEANUP_INFO
+    length = CLEANUP_INFO.base_length
+    rest_plan = (0, 0)
+
+
 @dataclass
 class Participant:
     id: int
