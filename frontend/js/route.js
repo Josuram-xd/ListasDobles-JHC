@@ -51,12 +51,23 @@ export class RouteView {
     this.marchers = new Map();
     // draw from last to first so the head of the parade stays on top
     [...snapshot.participants].reverse().forEach((p) => {
-      const group = svg("g", { class: `marcher cat-${p.category}`, "data-id": p.id }, this.marcherLayer);
-      svg("title", {}, group).textContent = `${p.position}. ${p.name}`;
-      svg("circle", { r: 17, class: "marcher-body" }, group);
-      svg("text", { class: "marcher-icon", "text-anchor": "middle", dy: "6" }, group).textContent = p.icon;
-      svg("circle", { r: 8, cx: 13, cy: -13, class: "marcher-badge" }, group);
-      svg("text", { x: 13, y: -10, class: "marcher-number", "text-anchor": "middle" }, group).textContent = p.position;
+      const group = svg("g", { class: `marcher cat-${p.category}${p.is_ad ? " ad" : ""}`, "data-id": p.id }, this.marcherLayer);
+      svg("title", {}, group).textContent = `${p.position}. ${p.name}${p.theme ? ` — ${p.theme}` : ""}`;
+      if (p.is_ad) {
+        // small advertising cart: a rounded box with wheels and a flag
+        svg("rect", { x: -13, y: -9, width: 26, height: 16, rx: 4, class: "marcher-body" }, group);
+        svg("circle", { cx: -7, cy: 9, r: 3.5, class: "wheel" }, group);
+        svg("circle", { cx: 7, cy: 9, r: 3.5, class: "wheel" }, group);
+        svg("text", { class: "marcher-icon small", "text-anchor": "middle", dy: "4" }, group).textContent = p.icon;
+      } else {
+        svg("circle", { r: 17, class: "marcher-body" }, group);
+        svg("text", { class: "marcher-icon", "text-anchor": "middle", dy: "6" }, group).textContent = p.icon;
+        svg("circle", { r: 8, cx: 13, cy: -13, class: "marcher-badge" }, group);
+        svg("text", { x: 13, y: -10, class: "marcher-number", "text-anchor": "middle" }, group).textContent = p.position;
+      }
+      const bubble = svg("g", { class: "rest-bubble", transform: "translate(-20 -26)" }, group);
+      svg("rect", { x: -13, y: -11, width: 26, height: 20, rx: 10 }, bubble);
+      svg("text", { "text-anchor": "middle", dy: "4" }, bubble).textContent = "☕";
       this.marchers.set(p.id, group);
     });
     this.seek(this.time);
@@ -82,23 +93,32 @@ export class RouteView {
     this.controls.clock.textContent = clockAt(this.data.start_time, time);
 
     const routeLength = this.data.route.length;
-    let waiting = 0, marching = 0, arrived = 0;
+    const counts = { waiting: 0, marching: 0, resting: 0, arrived: 0 };
     for (const p of this.data.participants) {
-      const meters = (time - p.schedule.start) * p.schedule.pace;
+      const meters = this.positionAt(p.schedule.track, time);
+      const resting = p.schedule.rests.some((rest) => time >= rest.start && time < rest.end);
       const marcher = this.marchers.get(p.id);
-      const state = meters <= 0 ? "waiting" : meters >= routeLength ? "arrived" : "marching";
+      const state = meters <= 0 ? "waiting" : meters >= routeLength ? "arrived" : resting ? "resting" : "marching";
       marcher.dataset.state = state;
-      if (state === "waiting") waiting++;
-      else if (state === "arrived") arrived++;
-      else marching++;
-      if (state === "marching") {
+      counts[state]++;
+      if (state === "marching" || state === "resting") {
         const point = this.path.getPointAtLength((meters / routeLength) * this.pathLength);
         marcher.setAttribute("transform", `translate(${point.x} ${point.y})`);
       }
     }
     this.controls.status.innerHTML =
-      `⏳ En espera: <b>${waiting}</b> · 🎉 Desfilando: <b>${marching}</b> · 🏁 Llegaron: <b>${arrived}</b>` +
+      `⏳ En espera: <b>${counts.waiting}</b> · 🎉 Desfilando: <b>${counts.marching}</b>` +
+      ` · ☕ Descansando: <b>${counts.resting}</b> · 🏁 Llegaron: <b>${counts.arrived}</b>` +
       ` · Recorrido de <b>${(routeLength / 1000).toFixed(1)} km</b> (${escapeHtml(this.data.route.name)})`;
+  }
+
+  /** Linear interpolation between the positions sampled by the simulation. */
+  positionAt(track, time) {
+    const exact = time / track.every;
+    const index = Math.min(Math.floor(exact), track.positions.length - 1);
+    const next = Math.min(index + 1, track.positions.length - 1);
+    const from = track.positions[index];
+    return from + (track.positions[next] - from) * (exact - index);
   }
 
   toggle() {
